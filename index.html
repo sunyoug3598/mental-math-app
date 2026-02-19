@@ -233,15 +233,6 @@
           </div>
           <div id="logList"></div>
         </div>
-
-        <!-- ✅ 오답노트 추가 -->
-        <div class="log">
-          <div class="row" style="justify-content:space-between; align-items:center;">
-            <div class="sub">오답노트(최대 20개)</div>
-            <button id="clearWrong">오답 지우기</button>
-          </div>
-          <div id="wrongList"></div>
-        </div>
       </div>
     </aside>
   </div>
@@ -264,8 +255,7 @@
     remainingInSet: 0,
     timerId: null,
     timeLeft: 0,
-    log: [],
-    wrong: []          // ✅ 오답노트
+    log: []
   };
 
   // ===== UI refs =====
@@ -290,10 +280,6 @@
 
   const logListEl = $("logList");
   const clearLogBtn = $("clearLog");
-
-  // ✅ 오답노트 UI
-  const wrongListEl = $("wrongList");
-  const clearWrongBtn = $("clearWrong");
 
   // ===== Problem generator =====
   function getRangeByDigits(d) {
@@ -447,45 +433,6 @@
     }
   }
 
-  // ===== Wrong Note =====
-  function loadWrong() {
-    try {
-      const raw = localStorage.getItem("mm_wrong_v1");
-      state.wrong = raw ? JSON.parse(raw) : [];
-    } catch {
-      state.wrong = [];
-    }
-    renderWrong();
-  }
-
-  function saveWrong() {
-    localStorage.setItem("mm_wrong_v1", JSON.stringify(state.wrong.slice(0, 20)));
-  }
-
-  function addWrong(entry) {
-    state.wrong.unshift(entry);
-    state.wrong = state.wrong.slice(0, 20);
-    saveWrong();
-    renderWrong();
-  }
-
-  function renderWrong() {
-    wrongListEl.innerHTML = "";
-    if (state.wrong.length === 0) {
-      const div = document.createElement("div");
-      div.className = "logItem";
-      div.innerHTML = `<span>오답이 아직 없어</span><span>✅</span>`;
-      wrongListEl.appendChild(div);
-      return;
-    }
-    for (const item of state.wrong) {
-      const div = document.createElement("div");
-      div.className = "logItem";
-      div.innerHTML = `<span><b>${item.q}</b></span><span>내 답 ${item.user} · 정답 ${item.correct}</span>`;
-      wrongListEl.appendChild(div);
-    }
-  }
-
   // ===== Game flow =====
   function nextProblem() {
     if (!state.running) return;
@@ -522,9 +469,6 @@
       state.score += 10 + Math.min(20, state.streak); // 연속보너스
       setFeedback("good", `정답! (+${10 + Math.min(20, state.streak)}점)`);
     } else {
-      // ✅ 오답 저장
-      addWrong({ q: state.current.text, user: raw, correct: String(correctAns), type: "WRONG", t: Date.now() });
-
       state.streak = 0;
       state.score = Math.max(0, state.score - 5);
       setFeedback("bad", `오답… 정답은 ${correctAns} ( -5점 )`);
@@ -537,10 +481,6 @@
 
   function skip() {
     if (!state.running || !state.current) return;
-
-    // ✅ 스킵도 오답노트에 저장
-    addWrong({ q: state.current.text, user: "SKIP", correct: String(state.current.answer), type: "SKIP", t: Date.now() });
-
     state.totalAnswered += 1;
     state.streak = 0;
     state.score = Math.max(0, state.score - 2);
@@ -552,10 +492,6 @@
 
   function timeOut() {
     if (!state.running || !state.current) return;
-
-    // ✅ 시간초과도 오답노트에 저장
-    addWrong({ q: state.current.text, user: "TIMEOUT", correct: String(state.current.answer), type: "TIMEOUT", t: Date.now() });
-
     state.totalAnswered += 1;
     state.streak = 0;
     state.score = Math.max(0, state.score - 3);
@@ -627,13 +563,6 @@
     renderLog();
   });
 
-  // ✅ 오답 지우기
-  clearWrongBtn.addEventListener("click", () => {
-    state.wrong = [];
-    saveWrong();
-    renderWrong();
-  });
-
   answerEl.addEventListener("keydown", (e) => {
     if (e.key === "Enter") submit();
     if (e.key === "Escape") skip();
@@ -646,7 +575,6 @@
 
   // init
   loadLog();
-  loadWrong();   // ✅ 오답 로드
   renderStats();
 })();
 </script>
