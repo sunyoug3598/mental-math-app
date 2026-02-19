@@ -1,246 +1,654 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>암산 훈련</title>
-<style>
-:root{--bg:#0b1020;--card:#121a33;--text:#eaf0ff;--muted:#a8b1d6;--accent:#6ee7ff;--good:#6dffb3;--bad:#ff6d8f;}
-*{box-sizing:border-box;}
-body{
-margin:0;font-family:system-ui;
-background:var(--bg);
-color:var(--text);
-display:grid;place-items:center;
-min-height:100vh;padding:20px;
-}
-.app{width:min(900px,100%);display:grid;grid-template-columns:1.3fr 1fr;gap:15px;}
-@media(max-width:800px){.app{grid-template-columns:1fr;}}
-.card{background:var(--card);padding:18px;border-radius:18px;}
-h1{margin:0;font-size:18px;}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-.pill{padding:6px 10px;border-radius:999px;background:#0f1733;font-size:13px;}
-.problem{margin-top:15px;}
-.equation{font-size:40px;font-weight:bold;margin:10px 0;}
-input{padding:12px;border-radius:10px;border:1px solid #333;background:#0f1733;color:white;font-size:18px;}
-button{padding:10px 12px;border-radius:10px;border:none;background:#1d2a5a;color:white;cursor:pointer;}
-button.primary{background:#0f4c5c;}
-button.danger{background:#5a1d2a;}
-.feedback{min-height:22px;margin-top:6px;}
-.good{color:var(--good);}
-.bad{color:var(--bad);}
-.muted{color:var(--muted);}
-.logItem{
-display:flex;justify-content:space-between;
-background:#0f1733;padding:6px 8px;
-border-radius:8px;margin-bottom:6px;
-font-size:13px;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>암산 훈련</title>
+  <style>
+    :root { --bg:#0b1020; --card:#121a33; --text:#eaf0ff; --muted:#a8b1d6; --accent:#6ee7ff; --good:#6dffb3; --bad:#ff6d8f; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% 10%, #1a2a6c55, transparent),
+                  radial-gradient(900px 600px at 90% 20%, #00c6ff33, transparent),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .app {
+      width: min(920px, 100%);
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+    }
+    @media (max-width: 840px) {
+      .app { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: linear-gradient(180deg, #141c3a, var(--card));
+      border: 1px solid #2a3566;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 20px 50px #00000055;
+    }
+    .title {
+      display:flex; align-items: baseline; justify-content: space-between;
+      gap: 12px; margin-bottom: 8px;
+    }
+    h1 { font-size: 20px; margin: 0; letter-spacing: 0.2px; }
+    .sub { color: var(--muted); font-size: 13px; }
+    .row { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .pill {
+      padding: 8px 10px;
+      border: 1px solid #2a3566;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      background: #0e1530aa;
+    }
+    .pill strong { color: var(--text); }
+    .problem {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .equation {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      line-height: 1.1;
+      margin: 0;
+    }
+    .answerRow { display:flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    input[type="text"] {
+      flex: 1;
+      min-width: 200px;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid #2a3566;
+      background: #0b1230;
+      color: var(--text);
+      font-size: 18px;
+      outline: none;
+    }
+    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #6ee7ff22; }
+    button {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid #2a3566;
+      background: #101a3a;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform .05s ease, border-color .2s ease;
+      user-select: none;
+    }
+    button:hover { border-color: #3c4aa0; }
+    button:active { transform: translateY(1px); }
+    .primary { border-color: #2d8fa0; background: #0f2b33; }
+    .primary:hover { border-color: var(--accent); }
+    .danger { border-color: #a03c63; background: #2b0f1c; }
+    .danger:hover { border-color: var(--bad); }
+    .feedback {
+      min-height: 22px;
+      font-size: 14px;
+      margin-top: 2px;
+    }
+    .good { color: var(--good); }
+    .bad { color: var(--bad); }
+    .muted { color: var(--muted); }
+    .settings {
+      display: grid;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .setting {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+    .setting label { color: var(--muted); font-size: 13px; }
+    select, input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #2a3566;
+      background: #0b1230;
+      color: var(--text);
+      outline: none;
+    }
+    .mini {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .log {
+      margin-top: 10px;
+      border-top: 1px dashed #2a3566;
+      padding-top: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .logItem {
+      display:flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border: 1px solid #22305c;
+      background: #0b1230aa;
+      border-radius: 12px;
+    }
+    .logItem b { color: var(--text); }
+  </style>
 </head>
 <body>
+  <div class="app">
+    <!-- Main -->
+    <section class="card" aria-label="암산 훈련">
+      <div class="title">
+        <h1>암산 훈련</h1>
+        <div class="sub" id="modeHint">Enter로 제출 · Esc로 건너뛰기</div>
+      </div>
 
-<div class="app">
+      <div class="row">
+        <div class="pill">점수: <strong id="score">0</strong></div>
+        <div class="pill">연속정답: <strong id="streak">0</strong></div>
+        <div class="pill">정답률: <strong id="acc">0%</strong></div>
+        <div class="pill">남은시간: <strong id="time">--</strong></div>
+      </div>
 
-<section class="card">
-<h1>암산 훈련</h1>
+      <div class="problem">
+        <p class="equation" id="equation">시작을 눌러줘!</p>
 
-<div class="row">
-<div class="pill">점수: <span id="score">0</span></div>
-<div class="pill">연속: <span id="streak">0</span></div>
-<div class="pill">정답률: <span id="acc">0%</span></div>
-<div class="pill">남은시간: <span id="time">--</span></div>
-</div>
+        <div class="answerRow">
+          <input id="answer" type="text" inputmode="numeric" autocomplete="off" placeholder="정답 입력" disabled />
+          <button class="primary" id="submit" disabled>제출</button>
+          <button id="skip" disabled>건너뛰기</button>
+        </div>
 
-<div class="problem">
-<div class="equation" id="equation">시작을 눌러줘!</div>
+        <div class="feedback" id="feedback"></div>
 
-<div class="row">
-<input id="answer" disabled placeholder="정답 입력"/>
-<button class="primary" id="submit" disabled>제출</button>
-<button id="skip" disabled>건너뛰기</button>
-</div>
+        <div class="row">
+          <button class="primary" id="start">시작</button>
+          <button class="danger" id="stop" disabled>중지</button>
+          <button id="reset">초기화</button>
+        </div>
+      </div>
+    </section>
 
-<div class="feedback muted" id="feedback"></div>
+    <!-- Settings / Log -->
+    <aside class="card" aria-label="설정">
+      <div class="title">
+        <h1>설정</h1>
+        <div class="sub">네 실력에 맞춰 조절</div>
+      </div>
 
-<div class="row" style="margin-top:10px;">
-<button class="primary" id="start">시작</button>
-<button class="danger" id="stop" disabled>중지</button>
-<button id="reset">초기화</button>
-</div>
-</div>
-</section>
+      <div class="settings">
+        <div class="setting">
+          <label for="op">연산</label>
+          <select id="op">
+            <option value="mix" selected>섞어서</option>
+            <option value="add">덧셈</option>
+            <option value="sub">뺄셈</option>
+            <option value="mul">곱셈</option>
+            <option value="div">나눗셈(정수)</option>
+          </select>
+        </div>
 
-<section class="card">
-<h1>오답노트 (최대 20개)</h1>
-<button id="clearWrong" style="margin:8px 0;">오답 지우기</button>
-<div id="wrongList"></div>
-</section>
+        <div class="setting">
+          <label for="digits">난이도(자릿수)</label>
+          <select id="digits">
+            <option value="1">1자리</option>
+            <option value="2" selected>2자리</option>
+            <option value="3">3자리</option>
+          </select>
+        </div>
 
-</div>
+        <div class="setting">
+          <label for="timeLimit">문제 제한시간(초)</label>
+          <input id="timeLimit" type="number" min="3" max="60" value="10"/>
+        </div>
+
+        <div class="setting">
+          <label for="totalCount">세트 문제 수</label>
+          <input id="totalCount" type="number" min="5" max="200" value="20"/>
+        </div>
+
+        <div class="mini">
+          • 나눗셈은 항상 <b>정수로 딱 떨어지게</b> 나와.<br/>
+          • 정확도/연속정답을 올리면 난이도 올려도 돼.<br/>
+          • “섞어서”는 덧셈/뺄셈/곱셈/나눗셈을 랜덤으로 내.
+        </div>
+
+        <div class="log">
+          <div class="row" style="justify-content:space-between; align-items:center;">
+            <div class="sub">최근 기록(최대 6개)</div>
+            <button id="clearLog">기록 지우기</button>
+          </div>
+          <div id="logList"></div>
+        </div>
+
+        <!-- ✅ 오답노트 추가 -->
+        <div class="log">
+          <div class="row" style="justify-content:space-between; align-items:center;">
+            <div class="sub">오답노트(최대 20개)</div>
+            <button id="clearWrong">오답 지우기</button>
+          </div>
+          <div id="wrongList"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
 
 <script>
-const $=id=>document.getElementById(id);
-const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+(() => {
+  // ===== Helpers =====
+  const $ = (id) => document.getElementById(id);
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-const state={
-running:false,
-current:null,
-score:0,
-streak:0,
-correct:0,
-total:0,
-wrong:[]
-};
+  // ===== State =====
+  const state = {
+    running: false,
+    current: null,     // { text, answer }
+    score: 0,
+    streak: 0,
+    correct: 0,
+    totalAnswered: 0,  // 제출+오답+스킵 포함(정확도 기준)
+    remainingInSet: 0,
+    timerId: null,
+    timeLeft: 0,
+    log: [],
+    wrong: []          // ✅ 오답노트
+  };
 
-const scoreEl=$("score");
-const streakEl=$("streak");
-const accEl=$("acc");
-const timeEl=$("time");
-const equationEl=$("equation");
-const feedbackEl=$("feedback");
-const answerEl=$("answer");
+  // ===== UI refs =====
+  const equationEl = $("equation");
+  const answerEl = $("answer");
+  const feedbackEl = $("feedback");
+  const scoreEl = $("score");
+  const streakEl = $("streak");
+  const accEl = $("acc");
+  const timeEl = $("time");
 
-let timer=null;
-let timeLeft=0;
+  const startBtn = $("start");
+  const stopBtn = $("stop");
+  const resetBtn = $("reset");
+  const submitBtn = $("submit");
+  const skipBtn = $("skip");
 
-function saveWrong(){
-localStorage.setItem("mm_wrong_v2",JSON.stringify(state.wrong.slice(0,20)));
-}
-function loadWrong(){
-const raw=localStorage.getItem("mm_wrong_v2");
-state.wrong=raw?JSON.parse(raw):[];
-renderWrong();
-}
-function renderWrong(){
-const list=$("wrongList");
-list.innerHTML="";
-if(state.wrong.length===0){
-list.innerHTML="<div class='logItem'>오답이 아직 없어 ✅</div>";
-return;
-}
-state.wrong.forEach(w=>{
-const div=document.createElement("div");
-div.className="logItem";
-div.innerHTML=`<span><b>${w.q}</b></span>
-<span>내 답 ${w.user} · 정답 ${w.correct}</span>`;
-list.appendChild(div);
-});
-}
-function addWrong(q,user,correct){
-state.wrong.unshift({q,user,correct});
-saveWrong();
-renderWrong();
-}
+  const opSel = $("op");
+  const digitsSel = $("digits");
+  const timeLimitInp = $("timeLimit");
+  const totalCountInp = $("totalCount");
 
-function newProblem(){
-const a=rand(10,99);
-const b=rand(10,99);
-state.current={text:`${a} + ${b}`,answer:a+b};
-equationEl.textContent=state.current.text;
-answerEl.value="";
-startTimer(10);
-}
+  const logListEl = $("logList");
+  const clearLogBtn = $("clearLog");
 
-function startTimer(sec){
-clearInterval(timer);
-timeLeft=sec;
-timeEl.textContent=timeLeft;
-timer=setInterval(()=>{
-timeLeft--;
-timeEl.textContent=timeLeft;
-if(timeLeft<=0){
-clearInterval(timer);
-timeOut();
-}
-},1000);
-}
+  // ✅ 오답노트 UI
+  const wrongListEl = $("wrongList");
+  const clearWrongBtn = $("clearWrong");
 
-function updateStats(){
-scoreEl.textContent=state.score;
-streakEl.textContent=state.streak;
-const acc=state.total?Math.round(state.correct/state.total*100):0;
-accEl.textContent=acc+"%";
-}
+  // ===== Problem generator =====
+  function getRangeByDigits(d) {
+    if (d === 1) return [0, 9];
+    if (d === 2) return [10, 99];
+    return [100, 999];
+  }
 
-function submit(){
-if(!state.running)return;
-const val=Number(answerEl.value);
-state.total++;
-if(val===state.current.answer){
-state.correct++;
-state.streak++;
-state.score+=10;
-feedbackEl.className="feedback good";
-feedbackEl.textContent="정답!";
-}else{
-state.streak=0;
-state.score=Math.max(0,state.score-5);
-feedbackEl.className="feedback bad";
-feedbackEl.textContent="오답!";
-addWrong(state.current.text,answerEl.value,state.current.answer);
-}
-updateStats();
-newProblem();
-}
+  function pickOp() {
+    const op = opSel.value;
+    if (op !== "mix") return op;
+    const ops = ["add", "sub", "mul", "div"];
+    return ops[randInt(0, ops.length - 1)];
+  }
 
-function skip(){
-if(!state.running)return;
-state.total++;
-state.streak=0;
-state.score=Math.max(0,state.score-2);
-feedbackEl.className="feedback bad";
-feedbackEl.textContent="건너뜀!";
-addWrong(state.current.text,"SKIP",state.current.answer);
-updateStats();
-newProblem();
-}
+  function makeProblem() {
+    const digits = Number(digitsSel.value);
+    const [min, max] = getRangeByDigits(digits);
+    const op = pickOp();
 
-function timeOut(){
-if(!state.running)return;
-state.total++;
-state.streak=0;
-state.score=Math.max(0,state.score-3);
-feedbackEl.className="feedback bad";
-feedbackEl.textContent="시간초과!";
-addWrong(state.current.text,"TIMEOUT",state.current.answer);
-updateStats();
-newProblem();
-}
+    let a, b, text, ans;
 
-$("start").onclick=()=>{
-state.running=true;
-answerEl.disabled=false;
-$("submit").disabled=false;
-$("skip").disabled=false;
-$("stop").disabled=false;
-$("start").disabled=true;
-newProblem();
-};
+    if (op === "add") {
+      a = randInt(min, max);
+      b = randInt(min, max);
+      text = `${a} + ${b}`;
+      ans = a + b;
+    } else if (op === "sub") {
+      // 음수 방지: 큰 수 - 작은 수
+      a = randInt(min, max);
+      b = randInt(min, max);
+      const hi = Math.max(a, b), lo = Math.min(a, b);
+      text = `${hi} - ${lo}`;
+      ans = hi - lo;
+    } else if (op === "mul") {
+      // 곱셈은 너무 커지는 것 방지: 자릿수에 따라 b 범위 줄이기
+      a = randInt(min, max);
+      const bMax = digits === 3 ? 99 : max;
+      b = randInt(min, bMax);
+      text = `${a} × ${b}`;
+      ans = a * b;
+    } else {
+      // div: 정수로 딱 떨어지게 만들기 (a ÷ b)
+      // a = b * k 형태로 만들자
+      const bMin = digits === 1 ? 2 : min; // 1자리면 0,1 피하기
+      b = randInt(bMin, max);
+      const k = randInt(1, digits === 3 ? 99 : 20);
+      a = b * k;
+      text = `${a} ÷ ${b}`;
+      ans = k;
+    }
 
-$("stop").onclick=()=>{
-state.running=false;
-clearInterval(timer);
-equationEl.textContent="중지됨";
-};
+    return { text, answer: ans };
+  }
 
-$("submit").onclick=submit;
-$("skip").onclick=skip;
-$("reset").onclick=()=>{
-location.reload();
-};
-$("clearWrong").onclick=()=>{
-state.wrong=[];
-saveWrong();
-renderWrong();
-};
+  // ===== Timer =====
+  function startTimer(seconds) {
+    clearInterval(state.timerId);
+    state.timeLeft = seconds;
+    timeEl.textContent = String(state.timeLeft);
 
-answerEl.addEventListener("keydown",e=>{
-if(e.key==="Enter")submit();
-});
+    state.timerId = setInterval(() => {
+      state.timeLeft -= 1;
+      timeEl.textContent = String(Math.max(0, state.timeLeft));
+      if (state.timeLeft <= 0) {
+        clearInterval(state.timerId);
+        // 시간초과 = 오답 처리(스킵과 구분)
+        timeOut();
+      }
+    }, 1000);
+  }
 
-loadWrong();
-updateStats();
+  function stopTimer() {
+    clearInterval(state.timerId);
+    state.timerId = null;
+    timeEl.textContent = "--";
+  }
+
+  // ===== Rendering =====
+  function renderStats() {
+    scoreEl.textContent = String(state.score);
+    streakEl.textContent = String(state.streak);
+    const acc = state.totalAnswered === 0 ? 0 : Math.round((state.correct / state.totalAnswered) * 100);
+    accEl.textContent = `${acc}%`;
+  }
+
+  function setFeedback(type, msg) {
+    feedbackEl.className = "feedback";
+    if (type === "good") feedbackEl.classList.add("good");
+    if (type === "bad") feedbackEl.classList.add("bad");
+    if (type === "muted") feedbackEl.classList.add("muted");
+    feedbackEl.textContent = msg;
+  }
+
+  function setRunningUI(running) {
+    state.running = running;
+    answerEl.disabled = !running;
+    submitBtn.disabled = !running;
+    skipBtn.disabled = !running;
+    startBtn.disabled = running;
+    stopBtn.disabled = !running;
+    opSel.disabled = running;
+    digitsSel.disabled = running;
+    timeLimitInp.disabled = running;
+    totalCountInp.disabled = running;
+  }
+
+  function showProblem(p) {
+    state.current = p;
+    equationEl.textContent = p.text;
+    answerEl.value = "";
+    answerEl.focus();
+  }
+
+  // ===== Log =====
+  function loadLog() {
+    try {
+      const raw = localStorage.getItem("mm_log_v1");
+      state.log = raw ? JSON.parse(raw) : [];
+    } catch {
+      state.log = [];
+    }
+    renderLog();
+  }
+
+  function saveLog() {
+    localStorage.setItem("mm_log_v1", JSON.stringify(state.log.slice(0, 6)));
+  }
+
+  function addLog(entry) {
+    state.log.unshift(entry);
+    state.log = state.log.slice(0, 6);
+    saveLog();
+    renderLog();
+  }
+
+  function renderLog() {
+    logListEl.innerHTML = "";
+    if (state.log.length === 0) {
+      const div = document.createElement("div");
+      div.className = "logItem";
+      div.innerHTML = `<span>기록이 아직 없어</span><span>🙂</span>`;
+      logListEl.appendChild(div);
+      return;
+    }
+    for (const item of state.log) {
+      const div = document.createElement("div");
+      div.className = "logItem";
+      div.innerHTML = `<span><b>${item.date}</b> · ${item.count}문제</span><span>정답률 ${item.acc}% · 점수 ${item.score}</span>`;
+      logListEl.appendChild(div);
+    }
+  }
+
+  // ===== Wrong Note =====
+  function loadWrong() {
+    try {
+      const raw = localStorage.getItem("mm_wrong_v1");
+      state.wrong = raw ? JSON.parse(raw) : [];
+    } catch {
+      state.wrong = [];
+    }
+    renderWrong();
+  }
+
+  function saveWrong() {
+    localStorage.setItem("mm_wrong_v1", JSON.stringify(state.wrong.slice(0, 20)));
+  }
+
+  function addWrong(entry) {
+    state.wrong.unshift(entry);
+    state.wrong = state.wrong.slice(0, 20);
+    saveWrong();
+    renderWrong();
+  }
+
+  function renderWrong() {
+    wrongListEl.innerHTML = "";
+    if (state.wrong.length === 0) {
+      const div = document.createElement("div");
+      div.className = "logItem";
+      div.innerHTML = `<span>오답이 아직 없어</span><span>✅</span>`;
+      wrongListEl.appendChild(div);
+      return;
+    }
+    for (const item of state.wrong) {
+      const div = document.createElement("div");
+      div.className = "logItem";
+      div.innerHTML = `<span><b>${item.q}</b></span><span>내 답 ${item.user} · 정답 ${item.correct}</span>`;
+      wrongListEl.appendChild(div);
+    }
+  }
+
+  // ===== Game flow =====
+  function nextProblem() {
+    if (!state.running) return;
+
+    if (state.remainingInSet <= 0) {
+      finishSet();
+      return;
+    }
+
+    const timeLimit = clamp(Number(timeLimitInp.value) || 10, 3, 60);
+    showProblem(makeProblem());
+    setFeedback("muted", `남은 문제: ${state.remainingInSet}개`);
+    startTimer(timeLimit);
+  }
+
+  function submit() {
+    if (!state.running || !state.current) return;
+
+    const raw = answerEl.value.trim();
+    if (raw === "" || raw === "-" ) {
+      setFeedback("muted", "숫자를 입력해줘 🙂");
+      answerEl.focus();
+      return;
+    }
+
+    const userAns = Number(raw);
+    const correctAns = state.current.answer;
+
+    state.totalAnswered += 1;
+
+    if (Number.isFinite(userAns) && userAns === correctAns) {
+      state.correct += 1;
+      state.streak += 1;
+      state.score += 10 + Math.min(20, state.streak); // 연속보너스
+      setFeedback("good", `정답! (+${10 + Math.min(20, state.streak)}점)`);
+    } else {
+      // ✅ 오답 저장
+      addWrong({ q: state.current.text, user: raw, correct: String(correctAns), type: "WRONG", t: Date.now() });
+
+      state.streak = 0;
+      state.score = Math.max(0, state.score - 5);
+      setFeedback("bad", `오답… 정답은 ${correctAns} ( -5점 )`);
+    }
+
+    state.remainingInSet -= 1;
+    renderStats();
+    nextProblem();
+  }
+
+  function skip() {
+    if (!state.running || !state.current) return;
+
+    // ✅ 스킵도 오답노트에 저장
+    addWrong({ q: state.current.text, user: "SKIP", correct: String(state.current.answer), type: "SKIP", t: Date.now() });
+
+    state.totalAnswered += 1;
+    state.streak = 0;
+    state.score = Math.max(0, state.score - 2);
+    setFeedback("bad", `건너뜀… 정답은 ${state.current.answer} ( -2점 )`);
+    state.remainingInSet -= 1;
+    renderStats();
+    nextProblem();
+  }
+
+  function timeOut() {
+    if (!state.running || !state.current) return;
+
+    // ✅ 시간초과도 오답노트에 저장
+    addWrong({ q: state.current.text, user: "TIMEOUT", correct: String(state.current.answer), type: "TIMEOUT", t: Date.now() });
+
+    state.totalAnswered += 1;
+    state.streak = 0;
+    state.score = Math.max(0, state.score - 3);
+    setFeedback("bad", `시간초과… 정답은 ${state.current.answer} ( -3점 )`);
+    state.remainingInSet -= 1;
+    renderStats();
+    nextProblem();
+  }
+
+  function start() {
+    const total = clamp(Number(totalCountInp.value) || 20, 5, 200);
+    state.score = 0;
+    state.streak = 0;
+    state.correct = 0;
+    state.totalAnswered = 0;
+    state.remainingInSet = total;
+
+    setRunningUI(true);
+    renderStats();
+    nextProblem();
+  }
+
+  function stop() {
+    setRunningUI(false);
+    stopTimer();
+    equationEl.textContent = "중지됨";
+    setFeedback("muted", "다시 시작하려면 시작 버튼!");
+  }
+
+  function resetAll() {
+    stop();
+    state.score = 0;
+    state.streak = 0;
+    state.correct = 0;
+    state.totalAnswered = 0;
+    state.remainingInSet = 0;
+    state.current = null;
+
+    equationEl.textContent = "시작을 눌러줘!";
+    answerEl.value = "";
+    setFeedback("muted", "");
+    renderStats();
+  }
+
+  function finishSet() {
+    stopTimer();
+    const acc = state.totalAnswered === 0 ? 0 : Math.round((state.correct / state.totalAnswered) * 100);
+    equationEl.textContent = "세트 완료 🎉";
+    setFeedback("good", `끝! 정답 ${state.correct}/${state.totalAnswered} · 정답률 ${acc}% · 점수 ${state.score}`);
+    addLog({
+      date: new Date().toLocaleDateString("ko-KR", { year:"numeric", month:"2-digit", day:"2-digit" }),
+      count: state.totalAnswered,
+      acc,
+      score: state.score
+    });
+    setRunningUI(false);
+  }
+
+  // ===== Events =====
+  submitBtn.addEventListener("click", submit);
+  skipBtn.addEventListener("click", skip);
+  startBtn.addEventListener("click", start);
+  stopBtn.addEventListener("click", stop);
+  resetBtn.addEventListener("click", resetAll);
+
+  clearLogBtn.addEventListener("click", () => {
+    state.log = [];
+    saveLog();
+    renderLog();
+  });
+
+  // ✅ 오답 지우기
+  clearWrongBtn.addEventListener("click", () => {
+    state.wrong = [];
+    saveWrong();
+    renderWrong();
+  });
+
+  answerEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submit();
+    if (e.key === "Escape") skip();
+  });
+
+  // 입력에서 숫자/음수기호만 허용(부드럽게)
+  answerEl.addEventListener("input", () => {
+    answerEl.value = answerEl.value.replace(/[^\d-]/g, "");
+  });
+
+  // init
+  loadLog();
+  loadWrong();   // ✅ 오답 로드
+  renderStats();
+})();
 </script>
 </body>
 </html>
